@@ -1,0 +1,26 @@
+// 代理设置页
+export default {
+  title: '代理设置',
+  autoStart: '开机自启（登录 Windows 后在后台托盘启动，代理随应用自动开启）',
+  autoStartOn: '开机自启已开启',
+  autoStartOff: '开机自启已关闭',
+  autoProxy: '启动时自动开启代理',
+  bind: '监听地址',
+  bindLoopback: '127.0.0.1 —— 仅本机（默认，最安全）',
+  bindAll: '0.0.0.0 —— 全部接口（WSL / 局域网可访问）',
+  bindWarn: '已开放全部接口但未设置本地 API Key，局域网内任何设备都可使用您的账号调用模型。建议在下方设置 API Key。',
+  port: '监听端口',
+  apiKey: '本地 API Key（留空 = 不鉴权；填写后请求需带 x-api-key 或 Bearer）',
+  apiKeyPh: '例如 sk-local-xxxx（可留空）',
+  genKey: '随机生成',
+  saving: '保存中…',
+  saveApply: '保存并应用',
+  saved: '配置已保存并应用',
+  language: {
+    label: '界面语言',
+    auto: '跟随系统',
+    zh: '中文',
+    en: 'English',
+    hint: '界面与系统通知即时生效；托盘菜单重启应用后生效',
+  },
+}

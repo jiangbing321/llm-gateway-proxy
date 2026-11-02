@@ -1,0 +1,5 @@
+frontend/package.json text eol=lf
+frontend/package.json.md5 -text
+frontend/package-lock.json text eol=lf
+frontend/wailsjs/** text eol=lf
+go.mod text eol=lf

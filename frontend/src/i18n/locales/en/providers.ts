@@ -1,0 +1,53 @@
+import type { MessageSchema } from '../zh'
+
+const providers: MessageSchema['providers'] = {
+  title: 'Provider upstreams',
+  add: 'Add provider',
+  desc: 'Routes by model name: a request whose model matches a provider\'s model list is routed to that provider; unmatched requests go to the default. Both API types are supported — the proxy converts between OpenAI ↔ Anthropic automatically (tool calls and streaming included). {b}: the provider configured first wins; you can also disambiguate explicitly as "provider/model" (e.g. {code}).',
+  descBold: 'When two providers declare the same model id',
+  th: {
+    name: 'Name',
+    type: 'Type',
+    status: 'Status',
+    models: 'Models',
+    default: 'Default',
+    actions: 'Actions',
+  },
+  setDefaultTip: 'Set as default route',
+  test: 'Test',
+  empty: 'No providers yet. Click "Add provider" to connect an OpenAI-compatible or Anthropic endpoint.',
+  form: {
+    edit: 'Edit provider',
+    add: 'Add provider',
+    name: 'Name',
+    namePh: 'e.g. DeepSeek / Moonshot / Anthropic official',
+    type: 'API type',
+    typeOpenai: 'OpenAI-compatible (/v1/chat/completions)',
+    typeAnthropic: 'Anthropic (/v1/messages)',
+    typeGemini: 'Gemini (Google AI Studio)',
+    baseUrl: 'Base URL (without /v1)',
+    anthropicHint: 'Official: https://api.anthropic.com',
+    geminiHint: 'Official: https://generativelanguage.googleapis.com',
+    apiKey: 'API Key',
+    models: 'Models (one per line, or separated by commas / semicolons / spaces; a matching model routes to this provider)',
+    fetching: 'Fetching…',
+    fetch: 'Fetch from provider',
+    fallbacks: 'Fallback models (tried in order when this provider fails or rate-limits; each resolves via normal routing, "provider/model" supported)',
+    maxTokens: 'Default max_tokens (used when an OpenAI client omits it; required by Anthropic)',
+    saving: 'Saving…',
+  },
+  toast: {
+    saved: 'Saved: {name} ({n} models)',
+    deleted: 'Deleted',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    defaultSwitched: 'Default provider switched',
+    testOk: 'Reachable (HTTP {status})',
+    testFail: 'Test failed: HTTP {status} {msg}',
+    fetched: 'Fetched {n} models — click to add',
+  },
+  confirmTitle: 'Delete provider',
+  confirmBody: 'Delete provider "{name}"? This cannot be undone.',
+}
+
+export default providers

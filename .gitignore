@@ -1,0 +1,8 @@
+node_modules/
+frontend/dist/
+frontend/wailsjs/runtime/package-lock.json
+llm-gateway-proxy.exe
+build/bin/
+build/windows/installer/project.nsi
+.trae/
+.playwright-mcp/
