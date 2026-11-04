@@ -112,6 +112,26 @@ See [DEPLOY.md](DEPLOY.md) for additional client examples and WSL connection ins
 - **Recording preview** — when enabled, browse each recorded LLM request and response by date, including model, timestamp, status, protocol conversion, message/tool-call details, and SSE frames. Switch between formatted and raw views, search entries, and copy the original payload. Recordings are stored in daily files and removed according to the retention period.
 - **Playground** — send requests from the desktop UI to validate the full proxy path.
 
+## Screenshots
+
+The screenshots below show the model list, request logs, usage statistics, and the recording preview for inspecting individual LLM exchanges.
+
+### Recording preview: inspect every LLM exchange
+
+![Recording preview: browse requests and responses by date and inspect interaction details](docs/images/recordings.png)
+
+### Model list
+
+![Model list: view models available for routing through the gateway](docs/images/models.png)
+
+### Request logs
+
+![Request logs: inspect status, latency, and token usage](docs/images/request_logs.png)
+
+### Usage statistics
+
+![Usage statistics: review requests and token usage over time](docs/images/usage.png)
+
 ## Security and privacy
 
 - The gateway listens on `127.0.0.1` by default. If you bind to `0.0.0.0` for WSL or LAN access, set a local API key and configure your firewall.
