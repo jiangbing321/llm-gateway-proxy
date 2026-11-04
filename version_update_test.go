@@ -1,6 +1,45 @@
 package main
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+	"time"
+)
+
+func TestSignVersionReportMatchesWorkerProtocol(t *testing.T) {
+	payload := []byte(`{"version":"1.2.3","os":"windows","arch":"amd64"}`)
+	nonceSource := bytes.NewReader(bytes.Repeat([]byte{0x11}, 16))
+	timestamp, nonce, signature, err := signVersionReport(
+		payload,
+		"0123456789abcdef0123456789abcdef",
+		time.Unix(1730000000, 0),
+		nonceSource,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if timestamp != "1730000000" {
+		t.Fatalf("timestamp = %q, want 1730000000", timestamp)
+	}
+	if nonce != "11111111111111111111111111111111" {
+		t.Fatalf("nonce = %q", nonce)
+	}
+	const wantSignature = "02d5269f0f1a3ae381c40e09978310c19dde77022e814d84df10dcb71f264156"
+	if signature != wantSignature {
+		t.Fatalf("signature = %q, want %q", signature, wantSignature)
+	}
+}
+
+func TestSignVersionReportRequiresStrongKeyAndNonce(t *testing.T) {
+	payload := []byte(`{"version":"1.2.3","os":"windows","arch":"amd64"}`)
+	now := time.Unix(1730000000, 0)
+	if _, _, _, err := signVersionReport(payload, "short", now, bytes.NewReader(make([]byte, 16))); err == nil {
+		t.Fatal("expected a short signing key to be rejected")
+	}
+	if _, _, _, err := signVersionReport(payload, "0123456789abcdef0123456789abcdef", now, bytes.NewReader(nil)); err == nil {
+		t.Fatal("expected an unavailable nonce source to be rejected")
+	}
+}
 
 func TestCompareSemanticVersions(t *testing.T) {
 	tests := []struct {

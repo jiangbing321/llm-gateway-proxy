@@ -55,13 +55,13 @@ Claude Code / Codex / Zoo Code / SDK / curl
 
 ### 版本检查与升级提示
 
-发布构建可通过 Wails linker flags 注入版本号与 Cloudflare Worker 版本服务地址。应用启动时异步检查更新，并上报版本号和系统/架构；服务端按日汇总，不含设备标识。仅发现更高版本时显示应用内提示条，检查失败不会影响启动。
+发布构建可通过 Wails linker flags 注入版本号、版本上报签名密钥与 Cloudflare Worker 版本服务地址。应用启动时异步检查更新，并签名上报版本号和系统/架构。Cloudflare 提供来源 IP，服务端按日、版本、平台和 IP 汇总；不收集设备 ID、API Key 或对话内容。仅发现更高版本时显示应用内提示条，检查失败不会影响启动。
 
 ```powershell
 wails build -ldflags "-X main.Version=1.2.3"
 ```
 
-正式发布时应注入真实版本号；默认版本服务地址为 [llmgate.yongyitec.com](https://llmgate.yongyitec.com)。如需切换服务地址，可额外传入 `-X main.VersionServiceURL=https://<your-worker-domain>`。Worker 初始化与发布配置见 [推广站部署说明](../llm-gateway-proxy-free-web/README.md)。
+正式发布需通过受控密钥管理器向 `VERSION_REPORT_SECRET` 注入至少 32 字节随机密钥，并在 Worker secret 中设置相同值。密钥会随客户端二进制分发，可能被提取；HMAC 时间戳和 nonce 仅提供基础防伪造/重放能力，不是强客户端身份认证。未配置密钥时客户端跳过上报，但仍检查更新。默认版本服务地址为 [llmgate.yongyitec.com](https://llmgate.yongyitec.com)。如需切换服务地址，可额外传入 `-X main.VersionServiceURL=https://<your-worker-domain>`。Worker 初始化与发布配置见 [推广站部署说明](../llm-gateway-proxy-free-web/README.md)。
 
 ### 从源码构建
 

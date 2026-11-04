@@ -77,10 +77,11 @@ WSL2 里 `127.0.0.1` 不通宿主机，需两步：
 正式发布构建应注入当前版本号和 Cloudflare Worker 地址：
 
 ```powershell
-wails build -ldflags "-X main.Version=1.2.3"
+$env:VERSION_REPORT_SECRET = '<从受控密钥管理器读取的 Worker 同一密钥>'
+wails build -ldflags "-X main.Version=1.2.3 -X main.VersionReportSigningKey=$env:VERSION_REPORT_SECRET"
 ```
 
-应用启动时异步上报版本号、操作系统和架构，并检查最新版。服务端仅保存每日汇总计数，不保存设备标识或单次报告；发现较新版本时，应用内提示条提供下载和更新说明入口。Worker 或网络不可用时，代理照常启动。每次发布时需同步更新 Worker 的最新版、下载链接和更新说明配置。
+应用启动时异步检查最新版，并使用 HMAC-SHA256 签名上报版本号、操作系统和架构。签名密钥至少 32 字节，必须与 Worker 的 `VERSION_REPORT_SECRET` 完全一致；通过 `npx wrangler secret put VERSION_REPORT_SECRET` 配置 Worker，不要提交密钥到源码。客户端密钥可被逆向提取，签名只提供基础防伪造/重放能力。Cloudflare 会提供请求来源 IP，服务端按日、版本、平台和 IP 汇总并无限期保留原始 IP；不保存设备标识、API Key 或对话内容。未注入客户端密钥时跳过上报，版本检查照常运行。每次发布时需同步更新 Worker 的最新版、下载链接和更新说明配置。
 
 ## 七、安全与合规（务必阅读）
 

@@ -55,13 +55,13 @@ If a prebuilt release is available on the project release page, download and run
 
 ### Version checks and update notices
 
-Release builds can inject the application version and Cloudflare Worker version-service URL through Wails linker flags. On startup, the app asynchronously checks for updates and reports its version and OS/architecture. Reports are aggregated daily without a device identifier. An in-app banner appears only when a newer version is available; network failures do not block startup.
+Release builds can inject the application version, report-signing key, and Cloudflare Worker version-service URL through Wails linker flags. On startup, the app asynchronously checks for updates and signs reports containing its version and OS/architecture. Cloudflare supplies the source IP; the service aggregates by day, version, platform, and IP, retaining raw IP values indefinitely. Reports do not include a device ID, API key, or conversation content. An in-app banner appears only when a newer version is available; network failures do not block startup.
 
 ```powershell
 wails build -ldflags "-X main.Version=1.2.3"
 ```
 
-The default version service is [llmgate.yongyitec.com](https://llmgate.yongyitec.com). Set the real version for each release; override the service address with `-X main.VersionServiceURL=https://<your-worker-domain>` if needed. See the [marketing site deployment guide](../llm-gateway-proxy-free-web/README.md) for Worker setup and release configuration.
+For release builds, inject a random signing secret of at least 32 bytes from a controlled secret manager and configure the same value as the Worker secret. The key is embedded in the distributed binary and can be extracted; HMAC with timestamp and nonce provides basic forgery/replay deterrence, not strong client identity. Without the key, the app skips reporting but continues checking for updates. The default version service is [llmgate.yongyitec.com](https://llmgate.yongyitec.com). Override it with `-X main.VersionServiceURL=https://<your-worker-domain>` if needed. See the [marketing site deployment guide](../llm-gateway-proxy-free-web/README.md) for Worker setup and release configuration.
 
 ### Build from source
 

@@ -3,6 +3,10 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	goruntime "runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,9 +22,10 @@ import (
 )
 
 var (
-	Version           = "0.0.0-dev"
-	VersionServiceURL = "https://llmgate.yongyitec.com"
-	versionHTTPClient = &http.Client{Timeout: 5 * time.Second}
+	Version                 = "0.0.0-dev"
+	VersionServiceURL       = "https://llmgate.yongyitec.com"
+	VersionReportSigningKey = ""
+	versionHTTPClient       = &http.Client{Timeout: 5 * time.Second}
 )
 
 type releaseUpdate struct {
@@ -33,6 +39,23 @@ type versionReport struct {
 	Version string `json:"version"`
 	OS      string `json:"os"`
 	Arch    string `json:"arch"`
+}
+
+func signVersionReport(payload []byte, secret string, now time.Time, nonceSource io.Reader) (timestamp, nonce, signature string, err error) {
+	if len([]byte(secret)) < 32 {
+		return "", "", "", fmt.Errorf("version report signing key must be at least 32 bytes")
+	}
+	nonceBytes := make([]byte, 16)
+	if _, err := io.ReadFull(nonceSource, nonceBytes); err != nil {
+		return "", "", "", fmt.Errorf("generate report nonce: %w", err)
+	}
+
+	timestamp = strconv.FormatInt(now.Unix(), 10)
+	nonce = hex.EncodeToString(nonceBytes)
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = fmt.Fprintf(mac, "version-report\n%s\n%s\n", timestamp, nonce)
+	_, _ = mac.Write(payload)
+	return timestamp, nonce, hex.EncodeToString(mac.Sum(nil)), nil
 }
 
 func (a *App) checkForVersionUpdates() {
@@ -52,6 +75,11 @@ func (a *App) checkForVersionUpdates() {
 }
 
 func (a *App) reportInstalledVersion(serviceURL string) {
+	if len([]byte(VersionReportSigningKey)) < 32 {
+		log.Printf("[version] version report signing key is not configured; skipping report")
+		return
+	}
+
 	payload, err := json.Marshal(versionReport{
 		Version: Version,
 		OS:      goruntime.GOOS,
@@ -69,6 +97,14 @@ func (a *App) reportInstalledVersion(serviceURL string) {
 		log.Printf("[version] could not create version report: %v", err)
 		return
 	}
+	timestamp, nonce, signature, err := signVersionReport(payload, VersionReportSigningKey, time.Now(), rand.Reader)
+	if err != nil {
+		log.Printf("[version] could not sign version report: %v", err)
+		return
+	}
+	req.Header.Set("X-Version-Timestamp", timestamp)
+	req.Header.Set("X-Version-Nonce", nonce)
+	req.Header.Set("X-Version-Signature", signature)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := versionHTTPClient.Do(req)
 	if err != nil {
