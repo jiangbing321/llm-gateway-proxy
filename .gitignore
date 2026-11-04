@@ -6,3 +6,4 @@ build/bin/
 build/windows/installer/project.nsi
 .trae/
 .playwright-mcp/
+release.sh
