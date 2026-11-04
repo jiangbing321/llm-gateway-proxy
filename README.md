@@ -53,6 +53,16 @@ Claude Code / Codex / Zoo Code / SDK / curl
 
 若项目发布页提供预构建版本，下载并运行 `LLMGatewayProxy.exe` 即可，无需单独安装前端。
 
+### 版本检查与升级提示
+
+发布构建可通过 Wails linker flags 注入版本号与 Cloudflare Worker 版本服务地址。应用启动时异步检查更新，并上报版本号和系统/架构；服务端按日汇总，不含设备标识。仅发现更高版本时显示应用内提示条，检查失败不会影响启动。
+
+```powershell
+wails build -ldflags "-X main.Version=1.2.3"
+```
+
+正式发布时应注入真实版本号；默认版本服务地址为 [llmgate.yongyitec.com](https://llmgate.yongyitec.com)。如需切换服务地址，可额外传入 `-X main.VersionServiceURL=https://<your-worker-domain>`。Worker 初始化与发布配置见 [推广站部署说明](../llm-gateway-proxy-free-web/README.md)。
+
 ### 从源码构建
 
 需要 Go 1.25、Node.js/npm 和 Wails v2 CLI：

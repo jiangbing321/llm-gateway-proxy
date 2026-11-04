@@ -26,6 +26,23 @@
       </div>
 
       <main class="main">
+        <section v-if="updateInfo" class="update-banner" role="status">
+          <div class="update-message">
+            <strong>{{ t('shell.updateAvailable', { version: updateInfo.version }) }}</strong>
+            <p v-if="updateInfo.releaseNotes">{{ updateInfo.releaseNotes }}</p>
+          </div>
+          <div class="update-actions">
+            <button type="button" class="update-link" @click="openUpdateLink(updateInfo.downloadUrl)">
+              {{ t('shell.downloadUpdate') }} <ExternalLink :size="13" />
+            </button>
+            <button type="button" class="update-link secondary" @click="openUpdateLink(updateInfo.releaseNotesUrl)">
+              {{ t('shell.releaseNotes') }}
+            </button>
+            <button type="button" class="update-dismiss" :aria-label="t('shell.dismissUpdate')" @click="updateInfo = null">
+              <X :size="15" />
+            </button>
+          </div>
+        </section>
         <Transition name="page" mode="out-in">
           <Dashboard v-if="app.page === 'dashboard'" />
           <ProvidersPage v-else-if="app.page === 'providers'" />
@@ -51,10 +68,10 @@ import type { Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   Home, Server, Boxes, BarChart3, FlaskConical,
-  FolderOpen, ScrollText, Settings2, ChevronLeft, ChevronRight
+  FolderOpen, ScrollText, Settings2, ChevronLeft, ChevronRight, ExternalLink, X
 } from 'lucide-vue-next'
-import { GetConfig, GetStatus } from '../wailsjs/go/main/App'
-import { EventsOn } from '../wailsjs/runtime/runtime'
+import { GetAvailableUpdate, GetConfig, GetStatus } from '../wailsjs/go/main/App'
+import { BrowserOpenURL, EventsOn } from '../wailsjs/runtime/runtime'
 import { useAppStore, LogEntry } from './stores/app'
 import { applyConfigLanguage } from './i18n'
 import TitleBar from './components/TitleBar.vue'
@@ -70,6 +87,17 @@ import Logs from './pages/Logs.vue'
 
 const app = useAppStore()
 const { t } = useI18n({ useScope: 'global' })
+interface UpdateInfo {
+  version: string
+  downloadUrl: string
+  releaseNotesUrl: string
+  releaseNotes?: string
+}
+const updateInfo = ref<UpdateInfo | null>(null)
+
+function openUpdateLink(url: string) {
+  BrowserOpenURL(url)
+}
 
 // ---- 侧边栏宽度拖拽 / 折叠（偏好持久化） ----
 const bodyEl = ref<HTMLElement | null>(null)
@@ -148,7 +176,20 @@ async function refreshConfig() {
   }
 }
 
+async function refreshAvailableUpdate() {
+  try {
+    const res = JSON.parse(await GetAvailableUpdate())
+    if (res.success && res.data) updateInfo.value = res.data
+  } catch (e) {
+    console.warn('GetAvailableUpdate failed', e)
+  }
+}
+
 onMounted(() => {
+  EventsOn('version:update-available', (info: UpdateInfo) => {
+    updateInfo.value = info
+  })
+  refreshAvailableUpdate()
   refreshStatus()
   refreshConfig()
   setInterval(refreshStatus, 5000)
@@ -166,3 +207,43 @@ onMounted(() => {
   })
 })
 </script>
+
+<style scoped>
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(124, 140, 248, .35);
+  border-radius: var(--radius);
+  background: linear-gradient(110deg, rgba(94, 106, 210, .16), rgba(34, 211, 238, .07));
+}
+.update-message { min-width: 0; }
+.update-message strong { color: var(--text); font-size: 12px; font-weight: 600; }
+.update-message p { margin: 4px 0 0; color: var(--text-dim); font-size: 11px; line-height: 1.5; }
+.update-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; }
+.update-link, .update-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--cyan);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.update-link:hover, .update-dismiss:hover { background: rgba(124, 140, 248, .12); }
+.update-link.secondary { color: var(--text-dim); }
+.update-dismiss { color: var(--text-dim); }
+@media (max-width: 650px) {
+  .update-banner { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .update-actions { width: 100%; justify-content: flex-start; }
+  .update-dismiss { margin-left: auto; }
+}
+</style>

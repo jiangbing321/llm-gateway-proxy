@@ -53,6 +53,16 @@ Requirements: Windows 10/11 x64 and the WebView2 Runtime. App data is stored und
 
 If a prebuilt release is available on the project release page, download and run `LLMGatewayProxy.exe`; the frontend is bundled in the executable.
 
+### Version checks and update notices
+
+Release builds can inject the application version and Cloudflare Worker version-service URL through Wails linker flags. On startup, the app asynchronously checks for updates and reports its version and OS/architecture. Reports are aggregated daily without a device identifier. An in-app banner appears only when a newer version is available; network failures do not block startup.
+
+```powershell
+wails build -ldflags "-X main.Version=1.2.3"
+```
+
+The default version service is [llmgate.yongyitec.com](https://llmgate.yongyitec.com). Set the real version for each release; override the service address with `-X main.VersionServiceURL=https://<your-worker-domain>` if needed. See the [marketing site deployment guide](../llm-gateway-proxy-free-web/README.md) for Worker setup and release configuration.
+
 ### Build from source
 
 Install Go 1.25, Node.js/npm, and the Wails v2 CLI:

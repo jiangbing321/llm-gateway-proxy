@@ -11,6 +11,10 @@ const shell: MessageSchema['shell'] = {
   expandNav: 'Expand sidebar',
   collapseNav: 'Collapse sidebar',
   proxyStatusChanged: 'Proxy status changed: ',
+  updateAvailable: 'Version {version} is available',
+  downloadUpdate: 'Download update',
+  releaseNotes: 'Release notes',
+  dismissUpdate: 'Dismiss update notice',
 }
 
 export default shell

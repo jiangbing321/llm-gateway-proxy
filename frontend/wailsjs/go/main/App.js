@@ -30,6 +30,10 @@ export function GetAutoStart() {
   return window['go']['main']['App']['GetAutoStart']();
 }
 
+export function GetAvailableUpdate() {
+  return window['go']['main']['App']['GetAvailableUpdate']();
+}
+
 export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }

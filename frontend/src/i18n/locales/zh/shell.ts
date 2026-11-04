@@ -10,4 +10,8 @@ export default {
   expandNav: '展开侧边栏',
   collapseNav: '收起侧边栏',
   proxyStatusChanged: '代理状态变更：',
+  updateAvailable: '发现新版本 {version}',
+  downloadUpdate: '下载更新',
+  releaseNotes: '更新说明',
+  dismissUpdate: '关闭升级提示',
 }

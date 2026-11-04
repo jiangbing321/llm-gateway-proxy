@@ -15,6 +15,8 @@ export function FetchProviderModels(arg1:string):Promise<string>;
 
 export function GetAutoStart():Promise<string>;
 
+export function GetAvailableUpdate():Promise<string>;
+
 export function GetConfig():Promise<string>;
 
 export function GetHealth():Promise<string>;

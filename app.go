@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -49,6 +50,8 @@ type App struct {
 	quitting  atomic.Bool // 真正退出标志（区别于"关闭=驻留托盘"）
 	instance  *singleinstance.Instance
 	logWriter io.WriteCloser // app.log 轮转写句柄（退出时关闭）
+	updateMu  sync.RWMutex
+	update    *releaseUpdate
 }
 
 // NewApp 组装应用（不包含 wails ctx 依赖的部分）。
@@ -167,6 +170,8 @@ func (a *App) startup(ctx context.Context) {
 			}
 		}()
 	}
+
+	a.checkForVersionUpdates()
 }
 
 // shutdown 清理。
