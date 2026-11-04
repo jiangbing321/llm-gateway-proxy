@@ -1,99 +1,99 @@
 # LLMGatewayProxy
 
-**把不同厂商、不同 API 协议的 LLM 接入统一到一个本地网关。**
+**One local gateway for LLM providers and API protocols.**
 
-LLMGatewayProxy 是一款面向 Windows 的桌面应用，为 Claude Code、Codex、Zoo Code、其他兼容客户端以及自建脚本提供统一的本地 API 入口。配置一次上游厂商，客户端即可通过熟悉的 OpenAI、Anthropic 或 OpenAI Responses 接口调用模型；需要跨协议时，由网关自动完成转换。
+LLMGatewayProxy is a Windows desktop app that gives Claude Code, Codex, Zoo Code, compatible clients, SDKs, and scripts a single local API endpoint. Configure upstream providers once, then call them through familiar OpenAI, Anthropic, or OpenAI Responses APIs. The gateway translates protocols when the client and provider do not speak the same API.
 
-[English](README.en.md)
+[简体中文](README.zh-CN.md)
 
-## 项目亮点
+## Highlights
 
-- **一个本地入口，接入多家上游**：支持 OpenAI 兼容、Anthropic 和 Gemini 上游；按请求中的模型名路由到对应厂商，也可以配置默认厂商或显式指定厂商。
-- **客户端与上游协议解耦**：提供 OpenAI Chat Completions、Anthropic Messages（包括 `count_tokens`）和 OpenAI Responses 接口。异构协议通过统一的 OpenAI Chat 中间表示进行请求、响应和流式转换。
-- **适配 Agent 工作流**：支持工具调用和 SSE 流式响应，让不同协议的客户端可以使用兼容的上游模型。
-- **故障转移不中断请求**：可配置候选模型；遇到上游 `429` 或 `5xx` 且尚未向客户端发送响应内容时，网关可继续尝试后续候选。
-- **录制预览，逐条查看 LLM 交互细节**：开启录制后，在桌面端按日期浏览每次记录的请求与响应；查看时间、模型、状态码、协议转换和流式标记。支持格式化对话视图与原始内容切换，可检查消息内容、工具调用、Token 用量及 SSE 帧，搜索并复制完整原文，便于排查 Agent 的实际输入输出。
-- **桌面管理，不只是一个代理进程**：可视化管理厂商、模型、请求日志、用量统计、健康状态和录制；提供 Playground 便于直接验证调用。
-- **轻量常驻**：窗口关闭后驻留系统托盘，支持单实例和开机自启；代理在本机后台持续服务。
-- **免费版无订阅与功能限制**：`free` 分支不包含支付/订阅流程，也不通过订阅限制功能。
+- **One endpoint, multiple providers** — supports OpenAI-compatible, Anthropic, and Gemini upstreams. Route requests by model name, configure a default provider, or explicitly select a provider.
+- **Decouple clients from provider protocols** — exposes OpenAI Chat Completions, Anthropic Messages (including `count_tokens`), and OpenAI Responses endpoints. Cross-protocol requests, responses, and streams are translated through a shared OpenAI Chat representation.
+- **Built for agent workflows** — supports tool calls and SSE streaming so compatible clients can use models behind different provider protocols.
+- **Fail over before a response starts** — configure candidate models; on an upstream `429` or `5xx`, the gateway can try the next candidate if it has not started writing a response to the client.
+- **Recording preview for every LLM exchange** — when recording is enabled, browse interactions by date and inspect each captured request and response in the desktop app. Review timestamps, models, status codes, protocol conversions, message and tool-call content, token usage, and SSE frames. Switch between formatted and raw views, search within an entry, and copy the original payload to understand exactly what went into and came back from the model.
+- **A desktop control center** — manage providers, models, request logs, usage statistics, health status, and recordings; use the built-in Playground to test requests.
+- **Lightweight background operation** — closing the window hides the app in the system tray. Single-instance behavior and launch-at-login are supported.
+- **Free edition, without subscriptions or feature gating** — the `free` branch contains no payment or subscription flow and does not restrict features behind a subscription.
 
-## 工作方式
+## How it works
 
 ```text
 Claude Code / Codex / Zoo Code / SDK / curl
                     │
                     ▼
-             本地 LLMGatewayProxy
-         API 兼容、协议转换、路由、日志
+             Local LLMGatewayProxy
+      API translation, routing, logs, metrics
                     │
           ┌─────────┼──────────┐
           ▼         ▼          ▼
-     OpenAI 兼容   Anthropic   Gemini
+   OpenAI-compatible Anthropic  Gemini
 ```
 
-客户端选择网关支持的 API 端点，并在请求中传入模型名。网关根据已配置的模型列表进行路由；当客户端协议和上游协议不同时，自动转换请求、响应以及流式事件。
+Point a client at a supported endpoint and pass a model name. The gateway routes the request using the configured model list. If the client and upstream use different protocols, it translates requests, responses, and streaming events.
 
-## 支持的接口
+## Supported endpoints
 
-| 客户端接口 | 用途 |
+| Client endpoint | API |
 |---|---|
 | `POST /v1/chat/completions` | OpenAI Chat Completions |
 | `POST /v1/messages` | Anthropic Messages |
-| `POST /v1/messages/count_tokens` | Anthropic Token 计数 |
+| `POST /v1/messages/count_tokens` | Anthropic token counting |
 | `POST /v1/responses` | OpenAI Responses |
-| `GET /v1/models` | 查看网关可路由的模型 |
+| `GET /v1/models` | List models routable through the gateway |
 
-上游支持 OpenAI 兼容、Anthropic 和 Gemini。协议转换覆盖常规请求/响应、工具调用及 SSE 流式响应。
+Upstreams can use OpenAI-compatible, Anthropic, or Gemini APIs. Cross-protocol translation covers regular requests and responses, tool calls, and SSE streams.
 
-## 获取与运行
+## Download and run
 
-### Windows 用户
+### Windows
 
-系统要求：Windows 10/11 x64，以及 WebView2 Runtime。应用数据保存在 `%APPDATA%\LLMGatewayProxy\`。
+Requirements: Windows 10/11 x64 and the WebView2 Runtime. App data is stored under `%APPDATA%\LLMGatewayProxy\`.
 
-若项目发布页提供预构建版本，下载并运行 `LLMGatewayProxy.exe` 即可，无需单独安装前端。
+If a prebuilt release is available on the project release page, download and run `LLMGatewayProxy.exe`; the frontend is bundled in the executable.
 
-### 版本检查与升级提示
+### Version checks and update notices
 
-发布构建可通过 Wails linker flags 注入版本号、版本上报签名密钥与 Cloudflare Worker 版本服务地址。应用启动时异步检查更新，并签名上报版本号和系统/架构。Cloudflare 提供来源 IP，服务端按日、版本、平台和 IP 汇总；不收集设备 ID、API Key 或对话内容。仅发现更高版本时显示应用内提示条，检查失败不会影响启动。
+Release builds can inject the application version, report-signing key, and Cloudflare Worker version-service URL through Wails linker flags. On startup, the app asynchronously checks for updates and signs reports containing its version and OS/architecture. Cloudflare supplies the source IP; the service aggregates by day, version, platform, and IP, retaining raw IP values indefinitely. Reports do not include a device ID, API key, or conversation content. An in-app banner appears only when a newer version is available; network failures do not block startup.
 
 ```powershell
 wails build -ldflags "-X main.Version=1.2.3"
 ```
 
-正式发布需通过受控密钥管理器向 `VERSION_REPORT_SECRET` 注入至少 32 字节随机密钥，并在 Worker secret 中设置相同值。密钥会随客户端二进制分发，可能被提取；HMAC 时间戳和 nonce 仅提供基础防伪造/重放能力，不是强客户端身份认证。未配置密钥时客户端跳过上报，但仍检查更新。默认版本服务地址为 [llmgate.yongyitec.com](https://llmgate.yongyitec.com)。如需切换服务地址，可额外传入 `-X main.VersionServiceURL=https://<your-worker-domain>`。Worker 初始化与发布配置见 [推广站部署说明](../llm-gateway-proxy-free-web/README.md)。
+For release builds, inject a random signing secret of at least 32 bytes from a controlled secret manager and configure the same value as the Worker secret. The key is embedded in the distributed binary and can be extracted; HMAC with timestamp and nonce provides basic forgery/replay deterrence, not strong client identity. Without the key, the app skips reporting but continues checking for updates. The default version service is [llmgate.yongyitec.com](https://llmgate.yongyitec.com). Override it with `-X main.VersionServiceURL=https://<your-worker-domain>` if needed. See the [marketing site deployment guide](../llm-gateway-proxy-free-web/README.md) for Worker setup and release configuration.
 
-### 从源码构建
+### Build from source
 
-需要 Go 1.25、Node.js/npm 和 Wails v2 CLI：
+Install Go 1.25, Node.js/npm, and the Wails v2 CLI:
 
 ```powershell
 npm --prefix frontend ci
 wails dev
 ```
 
-构建桌面应用：
+Build the desktop application:
 
 ```powershell
 wails build
 ```
 
-构建产物为 `build\bin\LLMGatewayProxy.exe`。请使用 `wails build` 完成打包；单独运行 `go build` 不会嵌入前端资源。
+The output is `build\bin\LLMGatewayProxy.exe`. Use `wails build` to package the frontend; running `go build` alone does not embed the frontend assets.
 
-运行后端测试：
+Run backend tests:
 
 ```powershell
 go test ./...
 ```
 
-## 快速开始
+## Quick start
 
-1. 启动应用，在“厂商管理”中添加上游：选择协议类型，填写 Base URL、API Key 和模型列表。
-2. 在模型页确认可路由的模型名称；如需未匹配模型的默认路由，在设置中选择默认厂商。
-3. 在“代理设置”中确认监听地址和端口。默认地址为 `127.0.0.1:8717`，本地 API Key 默认未设置。
-4. 将客户端 Base URL 指向本地网关，并使用相应 API 协议。
+1. Launch the app and add an upstream in **Providers**: choose its protocol, then enter the Base URL, API key, and model list.
+2. Verify routable model names in **Models**. Optionally select a default provider for model names that do not match a configured list.
+3. Check the bind address and port in **Proxy Settings**. The default is `127.0.0.1:8717`; the local API key is unset by default.
+4. Point your client to the local gateway and use the matching client API protocol.
 
-OpenAI 兼容客户端示例：
+OpenAI-compatible client example:
 
 ```bash
 curl http://127.0.0.1:8717/v1/chat/completions \
@@ -106,45 +106,45 @@ curl http://127.0.0.1:8717/v1/chat/completions \
   }'
 ```
 
-如果没有为本地代理设置 API Key，可移除 `x-api-key` 请求头。若启用本地 API Key，OpenAI 兼容客户端可通过 `x-api-key` 或 `Authorization` 请求头传入；Anthropic 客户端按其协议提供 API Key。
+If no local API key is configured, omit the `x-api-key` header. When enabled, OpenAI-compatible clients can send the local key in the `x-api-key` or `Authorization` header; Anthropic clients provide it using their usual API-key mechanism.
 
 ### Claude Code
 
-将 Anthropic API 请求指向代理地址（默认端口 `8717`），并将 API Key 设置为代理的本地 Key（如果已启用）。客户端调用 `/v1/messages`，网关再按模型路由到配置的上游。
+Point Anthropic API requests to the proxy (port `8717` by default) and use the local API key if one is configured. The client calls `/v1/messages`; the gateway routes the request to the configured upstream based on the model.
 
-更多客户端配置示例及 WSL 连接说明见 [DEPLOY.md](DEPLOY.md)。
+See [DEPLOY.md](DEPLOY.md) for additional client examples and WSL connection instructions.
 
-## 管理与可观测性
+## Management and observability
 
-- **请求日志**：查看调用的路由、模型、耗时和 Token 用量。
-- **用量统计**：按日期、厂商和模型聚合用量，并可配置计价规则估算成本。
-- **健康监控**：通过上游模型列表接口定期探测厂商状态，不发送对话消息。
-- **录制预览**：开启录制后，按日期逐条查看每次 LLM 请求与响应的详情，包括模型、时间、状态、协议转换、消息/工具调用内容和流式 SSE 帧；支持格式化/原始视图、搜索及复制原文。录制按天保存并按保留期清理。
-- **Playground**：直接从桌面界面发起请求，检查端到端代理链路。
+- **Request logs** — inspect routing, model, latency, and token usage.
+- **Usage statistics** — aggregate usage by date, provider, and model; configure pricing rules to estimate cost.
+- **Health monitoring** — periodically checks provider model-list APIs without sending chat messages.
+- **Recording preview** — when enabled, browse each recorded LLM request and response by date, including model, timestamp, status, protocol conversion, message/tool-call details, and SSE frames. Switch between formatted and raw views, search entries, and copy the original payload. Recordings are stored in daily files and removed according to the retention period.
+- **Playground** — send requests from the desktop UI to validate the full proxy path.
 
-## 界面预览
+## Screenshots
 
-以下截图展示模型列表、请求日志、用量统计，以及录制预览中逐条查看 LLM 交互详情的界面。
+The screenshots below show the model list, request logs, usage statistics, and the recording preview for inspecting individual LLM exchanges.
 
-### 录制预览：查看每次 LLM 交互
+### Recording preview: inspect every LLM exchange
 
-![录制预览：按日期浏览请求与响应，并查看交互详情](docs/images/recordings.png)
+![Recording preview: browse requests and responses by date and inspect interaction details](docs/images/recordings.png)
 
-### 模型列表
+### Model list
 
-![模型列表：查看网关聚合的可路由模型](docs/images/models.png)
+![Model list: view models available for routing through the gateway](docs/images/models.png)
 
-### 请求日志
+### Request logs
 
-![请求日志：查看调用状态、耗时和 Token 用量](docs/images/request_logs.png)
+![Request logs: inspect status, latency, and token usage](docs/images/request_logs.png)
 
-### 用量统计
+### Usage statistics
 
-![用量统计：按时间查看请求与 Token 用量](docs/images/usage.png)
+![Usage statistics: review requests and token usage over time](docs/images/usage.png)
 
-## 安全与隐私
+## Security and privacy
 
-- 默认只监听 `127.0.0.1`。若改为 `0.0.0.0` 以供 WSL 或局域网访问，请务必设置本地 API Key，并配置好防火墙。
-- Windows 上，厂商 API Key 和本地 API Key 使用当前 Windows 用户的 DPAPI 加密后保存。不要将应用配置目录分享给他人。
-- 请求录制可能包含提示词、工具参数及模型响应；启用前确认数据处理符合你的隐私与合规要求，并妥善保护录制文件。
-- 请自行遵守上游厂商的服务条款、速率限制和数据使用政策。
+- The gateway listens on `127.0.0.1` by default. If you bind to `0.0.0.0` for WSL or LAN access, set a local API key and configure your firewall.
+- On Windows, provider and local API keys are encrypted at rest with DPAPI for the current Windows user. Do not share the application data directory.
+- Recordings may contain prompts, tool arguments, and model responses. Before enabling recording, make sure your data handling meets your privacy and compliance requirements, and protect the resulting files.
+- Follow the terms of service, rate limits, and data policies of your upstream providers.
