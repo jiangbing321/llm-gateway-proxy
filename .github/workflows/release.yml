@@ -62,11 +62,11 @@ jobs:
 
       - name: Collect artifact (Windows)
         if: runner.os == 'Windows'
-        shell: bash
+        shell: pwsh
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          mkdir -p dist
-          cp "build/bin/LLMGatewayProxy.exe" "dist/LLMGatewayProxy_${VERSION}_windows_amd64.exe"
+          $version = "${env:GITHUB_REF_NAME}".TrimStart('v')
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path build/bin/LLMGatewayProxy.exe -DestinationPath "dist/LLMGatewayProxy_${version}_windows_amd64.zip"
 
       - name: Collect artifact (macOS)
         if: runner.os == 'macOS'
