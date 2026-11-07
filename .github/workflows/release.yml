@@ -103,8 +103,10 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }} # no checkout here — tell gh which repo to target
         run: |
           gh release create "$GITHUB_REF_NAME" dist/* \
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
-            --notes "macOS builds are not code-signed. If the app is blocked on first run, remove the quarantine attribute: xattr -cr /Applications/LLMGatewayProxy.app"
+            --notes "macOS builds are not code-signed. If the app is blocked on first run, remove the quarantine attribute: xattr -cr /Applications/LLMGatewayProxy.app" \
+            || gh release upload "$GITHUB_REF_NAME" dist/* --clobber
